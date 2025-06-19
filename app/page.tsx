@@ -75,7 +75,7 @@ export default function MinimalAIChat() {
             // Mostrar mensaje del usuario primero, luego animar la respuesta
             setMessages((prev) => [...prev, { ...currentMessage, content: "" }])
             setIsTyping(true)
-            animateMessage(currentMessage.content, currentMessage.id)
+            animateMessage(currentMessage.content, currentMessage.id, true)
           }
         }
       },
@@ -85,7 +85,11 @@ export default function MinimalAIChat() {
     return () => clearTimeout(timer)
   }, [currentMessageIndex])
 
-  const animateMessage = (content: string, messageId: string) => {
+  const animateMessage = (
+    content: string,
+    messageId: string,
+    advance: boolean = false,
+  ) => {
     const lines = content.split("\n")
     let currentLineIndex = 0
     let currentCharIndex = 0
@@ -113,16 +117,18 @@ export default function MinimalAIChat() {
       } else {
         // Animación completada
         setIsTyping(false)
-        setTimeout(() => {
-          setCurrentMessageIndex((prev) => prev + 1)
-        }, 1000)
+        if (advance) {
+          setTimeout(() => {
+            setCurrentMessageIndex((prev) => prev + 1)
+          }, 1000)
+        }
       }
     }
 
     animateNextChar()
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
 
@@ -132,21 +138,25 @@ export default function MinimalAIChat() {
       content: input.toUpperCase(),
     }
 
-    const botResponse: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: `Gracias por tu pregunta sobre "${input}". Esta es una respuesta simulada que demuestra el efecto typewriter línea por línea.\n\n### Características de esta demo\n\n• **Animación fluida**: Cada carácter aparece gradualmente\n• *Formato markdown*: Soporte para texto enriquecido\n• **Mayúsculas automáticas**: Las preguntas se convierten automáticamente\n\nEsta interfaz está diseñada para ser *minimalista y profesional*.`,
-    }
+    const assistantId = (Date.now() + 1).toString()
 
-    setMessages((prev) => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMessage, { id: assistantId, role: "assistant", content: "" }])
     setInput("")
+    setIsTyping(true)
 
-    // Simular respuesta del bot después de un breve delay
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { ...botResponse, content: "" }])
-      setIsTyping(true)
-      animateMessage(botResponse.content, botResponse.id)
-    }, 500)
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      })
+
+      const data = await res.json()
+      const answer = data.answer || data.message || data.choices?.[0]?.message?.content || ""
+      animateMessage(answer, assistantId)
+    } catch (error) {
+      animateMessage("Error obteniendo respuesta.", assistantId)
+    }
   }
 
   const formatContent = (content: string) => {
