@@ -18,7 +18,10 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        messages: [{ role: "user", content: message }],
+        query: message,
+        response_mode: "blocking",
+        user: "v0-chat",
+        inputs: {},
       }),
     });
 
