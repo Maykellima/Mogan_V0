@@ -4,12 +4,8 @@ export async function POST(request: Request) {
   try {
     const { message } = await request.json();
 
-    const apiUrl =
-      process.env.DIFY_API_URL ?? "https://api.dify.ai/v1/chat-messages";
-        query: message,
-        response_mode: "blocking",
-        user: "v0-chat",
-        inputs: {},
+    const apiKey = process.env.DIFY_API_KEY;
+    const apiUrl = process.env.DIFY_API_URL ?? "https://api.dify.ai/v1/chat-messages";
 
     if (!apiKey) {
       return NextResponse.json({ error: "Missing DIFY_API_KEY" }, { status: 500 });
@@ -22,13 +18,16 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        messages: [{ role: "user", content: message }],
+        query: message,
+        response_mode: "blocking",
+        user: "v0-chat",
+        inputs: {},
       }),
     });
 
     const data = await res.json();
-
     return NextResponse.json(data, { status: res.status });
+    
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

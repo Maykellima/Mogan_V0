@@ -150,8 +150,7 @@ if (advance) {
       .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
       .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>')
-      .replace(
-        /\[([^\]]+)\]$$([^)]+)$$/g,
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
         '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>',
       )
   }
