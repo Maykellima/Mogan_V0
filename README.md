@@ -38,4 +38,4 @@ To enable AI responses powered by [Dify](https://docs.dify.ai/):
    `DIFY_API_URL`).
 
 With these variables configured, the frontend will send user questions to
-`/api/chat`, which proxies requests to Dify's chat completion API. When the key is present, responses come directly from Dify instead of the previous simulated answers.
+`/api/chat`, which proxies requests to Dify's chat-messages API. When the
