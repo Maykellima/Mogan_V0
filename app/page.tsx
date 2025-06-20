@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 interface Message {
   id: string
@@ -9,74 +9,10 @@ interface Message {
   content: string
 }
 
-const simulatedMessages: Message[] = [
-  {
-    id: "1",
-    role: "user",
-    content: "¿CUÁLES SON LAS MEJORES PRÁCTICAS PARA DISEÑO DE INTERFACES?",
-  },
-  {
-    id: "2",
-    role: "assistant",
-    content: `### Principios fundamentales del diseño de interfaces
-
-Las mejores prácticas incluyen:
-
-• **Simplicidad**: Mantén la interfaz limpia y sin elementos innecesarios
-• **Consistencia**: Usa patrones de diseño coherentes en toda la aplicación
-• **Jerarquía visual**: Organiza la información por orden de importancia
-• *Accesibilidad*: Asegúrate de que sea usable para todos los usuarios
-• **Feedback inmediato**: Proporciona respuestas claras a las acciones del usuario
-
-La clave está en *priorizar la experiencia del usuario* por encima de la complejidad técnica. Puedes leer más en [Material Design](https://material.io/design).`,
-  },
-  {
-    id: "3",
-    role: "user",
-    content: "¿CÓMO IMPLEMENTAR ANIMACIONES SUAVES EN CSS?",
-  },
-  {
-    id: "4",
-    role: "assistant",
-    content: `### Técnicas para animaciones CSS fluidas
-
-Para crear animaciones suaves y profesionales:
-
-• **Transitions**: Usa \`transition: all 0.3s ease\` para cambios de estado
-• **Transform**: Prefiere \`transform\` sobre cambios de posición directos
-• **Keyframes**: Define animaciones complejas con \`@keyframes\`
-• *Timing functions*: Experimenta con \`ease-in-out\`, \`cubic-bezier()\`
-• **Hardware acceleration**: Usa \`will-change\` para optimizar rendimiento
-
-Recuerda que las animaciones deben *mejorar la experiencia*, no distraer del contenido principal.`,
-  },
-]
-
 export default function MinimalAIChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
-  const [displayedContent, setDisplayedContent] = useState("")
   const [isTyping, setIsTyping] = useState(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentMessageIndex < simulatedMessages.length) {
-        const currentMessage = simulatedMessages[currentMessageIndex]
-
-        if (currentMessage.role === "user") {
-          setMessages((prev) => [...prev, currentMessage])
-          setCurrentMessageIndex((prev) => prev + 1)
-        } else {
-          setMessages((prev) => [...prev, { ...currentMessage, content: "" }])
-          setIsTyping(true)
-          animateMessage(currentMessage.content, currentMessage.id, true)
-        }
-      }
-    }, currentMessageIndex === 0 ? 1000 : 2000)
-
-    return () => clearTimeout(timer)
-  }, [currentMessageIndex])
 
   const animateMessage = (
     content: string,
@@ -110,11 +46,6 @@ export default function MinimalAIChat() {
         setTimeout(animateNextChar, Math.random() * 7.5 + 5)
       } else {
         setIsTyping(false)
-        if (advance) {
-          setTimeout(() => {
-            setCurrentMessageIndex((prev) => prev + 1)
-          }, 1000)
-        }
       }
     }
 
