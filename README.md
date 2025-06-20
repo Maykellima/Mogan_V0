@@ -28,3 +28,16 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Dify Integration
+
+To enable AI responses powered by [Dify](https://docs.dify.ai/):
+
+1. Copy `.env.example` to `.env.local`.
+2. Edit `.env.local` and provide your `DIFY_API_KEY` (and optionally
+   `DIFY_API_URL`).
+
+With these variables configured, the frontend will send user questions to
+`/api/chat`, which proxies requests to Dify's chat completion API. When the
+key is present, responses come directly from Dify instead of the previous
+simulated answers.
