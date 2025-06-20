@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 
 interface Message {
@@ -60,27 +59,21 @@ export default function MinimalAIChat() {
   const [displayedContent, setDisplayedContent] = useState("")
   const [isTyping, setIsTyping] = useState(false)
 
-  // Simular carga inicial de mensajes
   useEffect(() => {
-    const timer = setTimeout(
-      () => {
-        if (currentMessageIndex < simulatedMessages.length) {
-          const currentMessage = simulatedMessages[currentMessageIndex]
+    const timer = setTimeout(() => {
+      if (currentMessageIndex < simulatedMessages.length) {
+        const currentMessage = simulatedMessages[currentMessageIndex]
 
-          if (currentMessage.role === "user") {
-            // Mostrar mensaje del usuario inmediatamente
-            setMessages((prev) => [...prev, currentMessage])
-            setCurrentMessageIndex((prev) => prev + 1)
-          } else {
-            // Mostrar mensaje del usuario primero, luego animar la respuesta
-            setMessages((prev) => [...prev, { ...currentMessage, content: "" }])
-            setIsTyping(true)
-            animateMessage(currentMessage.content, currentMessage.id, true)
-          }
+        if (currentMessage.role === "user") {
+          setMessages((prev) => [...prev, currentMessage])
+          setCurrentMessageIndex((prev) => prev + 1)
+        } else {
+          setMessages((prev) => [...prev, { ...currentMessage, content: "" }])
+          setIsTyping(true)
+          animateMessage(currentMessage.content, currentMessage.id, true)
         }
-      },
-      currentMessageIndex === 0 ? 1000 : 2000,
-    )
+      }
+    }, currentMessageIndex === 0 ? 1000 : 2000)
 
     return () => clearTimeout(timer)
   }, [currentMessageIndex])
@@ -88,7 +81,7 @@ export default function MinimalAIChat() {
   const animateMessage = (
     content: string,
     messageId: string,
-    advance: boolean = false,
+    advance: boolean = false
   ) => {
     const lines = content.split("\n")
     let currentLineIndex = 0
@@ -103,19 +96,19 @@ export default function MinimalAIChat() {
           animatedContent += currentLine[currentCharIndex]
           currentCharIndex++
         } else {
-          // Línea completada, pasar a la siguiente
           animatedContent += "\n"
           currentLineIndex++
           currentCharIndex = 0
         }
 
-        // Actualizar el mensaje en el estado
-        setMessages((prev) => prev.map((msg) => (msg.id === messageId ? { ...msg, content: animatedContent } : msg)))
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId ? { ...msg, content: animatedContent } : msg
+          )
+        )
 
-        // Continuar animación
         setTimeout(animateNextChar, Math.random() * 7.5 + 5)
       } else {
-        // Animación completada
         setIsTyping(false)
         if (advance) {
           setTimeout(() => {
@@ -161,7 +154,6 @@ export default function MinimalAIChat() {
 
   const formatContent = (content: string) => {
     return content.split("\n").map((line, index) => {
-      // Títulos h3
       if (line.startsWith("### ")) {
         return (
           <h3 key={index} className="text-lg font-semibold mb-2 mt-4 first:mt-0">
@@ -170,7 +162,6 @@ export default function MinimalAIChat() {
         )
       }
 
-      // Lista con bullet points
       if (line.startsWith("• ")) {
         const text = line.replace("• ", "")
         return (
@@ -181,12 +172,10 @@ export default function MinimalAIChat() {
         )
       }
 
-      // Líneas vacías
       if (line.trim() === "") {
         return <br key={index} />
       }
 
-      // Texto normal
       return <p key={index} className="mb-2" dangerouslySetInnerHTML={{ __html: formatInlineText(line) }} />
     })
   }
@@ -197,14 +186,13 @@ export default function MinimalAIChat() {
       .replace(/\*(.*?)\*/g, "<em>$1</em>")
       .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-        '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>',
+        '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>'
       )
   }
 
   return (
     <div className="min-h-screen bg-white flex justify-center">
       <div className="w-[640px] py-8">
-        {/* Zona de mensajes */}
         <div className="mb-6 space-y-3">
           {messages.map((message) => (
             <div key={message.id} className="text-left ml-[60px] relative">
@@ -226,7 +214,6 @@ export default function MinimalAIChat() {
           )}
         </div>
 
-        {/* Input */}
         <form onSubmit={handleSubmit} className="relative">
           <input
             type="text"
