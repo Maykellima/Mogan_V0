@@ -4,8 +4,12 @@ export async function POST(request: Request) {
   try {
     const { message } = await request.json();
 
-const apiKey = process.env.DIFY_API_KEY;
-const apiUrl = process.env.DIFY_API_URL ?? "https://api.dify.ai/v1/chat/completions";
+    const apiUrl =
+      process.env.DIFY_API_URL ?? "https://api.dify.ai/v1/chat-messages";
+        query: message,
+        response_mode: "blocking",
+        user: "v0-chat",
+        inputs: {},
 
     if (!apiKey) {
       return NextResponse.json({ error: "Missing DIFY_API_KEY" }, { status: 500 });
