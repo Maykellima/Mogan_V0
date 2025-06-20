@@ -16,9 +16,35 @@ export default function MinimalAIChat() {
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
 
-  const animateMessage = (
-    content: string,
-    messageId: string,
+// Simular carga inicial de mensajes
+useEffect(() => {
+  const timer = setTimeout(() => {
+    if (currentMessageIndex < simulatedMessages.length) {
+      const currentMessage = simulatedMessages[currentMessageIndex]
+
+      if (currentMessage.role === "user") {
+        // Mostrar mensaje del usuario inmediatamente
+        setMessages((prev) => [...prev, currentMessage])
+        setCurrentMessageIndex((prev) => prev + 1)
+      } else {
+        // Mostrar mensaje del usuario primero, luego animar la respuesta
+        setMessages((prev) => [...prev, { ...currentMessage, content: "" }])
+        setIsTyping(true)
+        animateMessage(currentMessage.content, currentMessage.id, true)
+      }
+    }
+  }, currentMessageIndex === 0 ? 1000 : 2000)
+
+  return () => clearTimeout(timer)
+}, [currentMessageIndex])
+
+const animateMessage = (
+  content: string,
+  messageId: string,
+  advance: boolean = false,
+) => {
+  // aquí va la lógica de animación...
+}
   ) => {
     const lines = content.split("\n")
     let currentLineIndex = 0
@@ -47,8 +73,11 @@ export default function MinimalAIChat() {
       } else {
         // Animación completada
         setIsTyping(false)
-      }
-    }
+if (advance) {
+  setTimeout(() => {
+    setCurrentMessageIndex((prev) => prev + 1)
+  }, 1000)
+}
 
     animateNextChar()
   }
