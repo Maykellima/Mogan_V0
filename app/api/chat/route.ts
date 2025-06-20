@@ -4,7 +4,7 @@ export async function POST(request: Request) {
   try {
     const { message } = await request.json();
 
-    const apiKey = process.env.DIFY_API_KEY=app-f9As59yrPBcnYxiV05jTk2nI;
+    const apiKey = process.env.DIFY_API_KEY;
     const apiUrl = process.env.DIFY_API_URL ?? "https://api.dify.ai/v1/chat-messages";
 
     if (!apiKey) {
