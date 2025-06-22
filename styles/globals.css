@@ -92,3 +92,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Oculta la barra de scroll en Chrome, Safari y Opera */
+::-webkit-scrollbar {
+  display: none;
+}
