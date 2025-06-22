@@ -271,8 +271,12 @@ export default function MinimalAIChat() {
               ) : (
                 <div className="text-[#404040] text-xs max-w-[440px]">
                   {formatContent(m.content)}
-                  {/* El cursor parpadeante ahora depende de isTyping y si es el último mensaje del asistente siendo animado */}
-                  {isTyping && m.id === lastAssistantContent.messageId && (
+                  {/* El cursor parpadeante ahora depende de si es el último mensaje del asistente y está vacío o animándose */}
+                  {(
+                    idx === messages.length - 1 &&
+                    m.role === "assistant" &&
+                    (m.content === "" || (isTyping && m.id === lastAssistantContent.messageId))
+                  ) && (
                     <span
                       ref={lastAnswerEndRef}
                       className="inline-block align-middle bg-[#404040] animate-pulse"
