@@ -7,6 +7,7 @@ import {
   useEffect,
   useLayoutEffect,
 } from "react"
+import ReactMarkdown from 'react-markdown'
 
 interface Message {
   id: string
@@ -22,10 +23,10 @@ export default function MinimalAIChat() {
 
   /** refs y scroll */
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  // Usaremos un único ref para el elemento "fantasma" al final del chat
   const chatEndRef = useRef<HTMLDivElement>(null)
 
-  const bottomOffset = 150 // altura del textbox + margen (esto ya no será tan crítico con scrollIntoView)
+  // bottomOffset ya no es tan crítico con scrollIntoView, pero lo mantenemos como referencia
+  const bottomOffset = 150
 
   /** estado auxiliar para el streaming del asistente */
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
@@ -33,15 +34,13 @@ export default function MinimalAIChat() {
   /* ────────────────────── 1. Gestión del scroll (Simplificada) ────────────────────── */
 
   // Este efecto se encargará de todo el auto-scroll.
-useLayoutEffect(() => {
-  if (chatEndRef.current) {
-    // Cambiamos block: "end" a block: "start" o "center"
-    // "start" intentará colocar el inicio del elemento al inicio del contenedor visible.
-    // "center" intentará centrarlo.
-    // Con un padding-bottom generoso, "start" suele funcionar mejor para asegurar visibilidad superior.
-    chatEndRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [messages.length, messages.find(m => m.id === streamingMessageId)?.content]);
+  useLayoutEffect(() => {
+    if (chatEndRef.current) {
+      // Ajustado a 'end' de nuevo para trabajar mejor con el espacio fijo de `chatEndRef` al final
+      // Esto asegura que el final del espaciador sea visible, empujando el contenido hacia arriba.
+      chatEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages.length, messages.find(m => m.id === streamingMessageId)?.content]);
 
 
   /* ────────────────────── 2. Lógica de mensajes  ───────────────────── */
@@ -145,63 +144,112 @@ useLayoutEffect(() => {
         '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>',
       )
 
-  const formatContent = (c: string) =>
-    c.split("\n").map((line, i) => {
-      if (line.startsWith("### "))
-        return (
-          <h3 key={i} className="text-lg font-semibold mb-2 mt-4 first:mt-0">
-            {line.replace("### ", "")}
-          </h3>
-        )
-      if (line.startsWith("• ")) {
-        const txt = line.replace("• ", "")
-        return (
-          <div key={i} className="flex items-start mb-1">
-            <span className="mr-2">•</span>
-            <span
-              dangerouslySetInnerHTML={{ __html: formatInlineText(txt) }}
-            />
-          </div>
-        )
-      }
-      if (line.trim() === "") return <br key={i} />
-      return (
-        <p
-          key={i}
-          className="mb-2"
-          dangerouslySetInnerHTML={{ __html: formatInlineText(line) }}
-        />
-      )
-    })
+  const formatContent = (content: string) => {
+    // Reemplazar los encabezados #### por h2 y h3 y dar formato a las listas
+    const formattedContent = content
+      .replace(/#### (.*?)$/gm, '<h2 class="text-lg font-semibold mt-4 mb-2">$1</h2>')
+      .replace(/### (.*?)$/gm, '<h3 class="text-base font-medium mt-3 mb-2">$1</h3>')
+      .replace(/^• (.*?)$/gm, '<div class="flex items-start mb-1"><span class="mr-2">•</span><span>$1</span></div>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>')
+      .replace(/\n/g, '<br/>')
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" class="text-blue-600 hover:text-blue-800 underline" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+
+    return <div dangerouslySetInnerHTML={{ __html: formattedContent }} />;
+  };
+
+  // Componente para renderizar mensajes con estilos personalizados
+  const MarkdownContent = ({ content }: { content: string }) => (
+    <ReactMarkdown
+      components={{
+        h1: ({ children }) => (
+          <h1 className="text-lg font-semibold mt-8 mb-[1opx] tracking-wide">{children}</h1>
+        ),
+        h2: ({ children }) => (
+          <h2 className="text-lg font-semibold mt-8 mb-[10px] tracking-wide">{children}</h2>
+        ),
+        h3: ({ children }) => (
+          <h3 className="text-lg font-semibold mt-8 mb-[10px] tracking-wide">{children}</h3>
+        ),
+        p: ({ children }) => (
+          <p className="mb-4 tracking-wide leading-relaxed">{children}</p>
+        ),
+        ul: ({ children }) => (
+          <ul className="mb-4 space-y-2 tracking-wide list-disc list-inside">{children}</ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="mb-4 space-y-2 tracking-wide list-decimal list-inside">{children}</ol>
+        ),
+        li: ({ children }) => {
+          // Si el contenido es solo un punto o está vacío, no renderizar la viñeta
+          const text = Array.isArray(children) ? children.join("") : children;
+          if (typeof text === "string" && text.trim() === "•") return null;
+          if (typeof text === "string" && text.trim() === "") return null;
+          return <li>{children}</li>;
+        },
+        code: ({ children }) => (
+          <code className="bg-gray-100 px-1 rounded tracking-wide">{children}</code>
+        ),
+        a: ({ href, children }) => (
+          <a 
+            href={href}
+            className="text-blue-600 hover:text-blue-800 underline tracking-wide"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {children}
+          </a>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="w-[640px] mx-auto h-[90vh] flex flex-col">
+      {/* Contenedor principal del chat */}
+      {/* En móviles (sin prefijo), ocupa todo el ancho y alto del viewport. */}
+      {/* En pantallas 'md' (768px y más), el ancho se fija a 640px y se centra. */}
+      <div className="flex flex-col h-screen md:h-[90vh] w-full md:w-[640px] mx-auto">
         {/* LISTADO MENSAJES */}
+        {/* En móviles, el padding-bottom debe ser suficiente para el textbox. */}
         <div
           ref={messagesContainerRef}
-          className="flex-1 w-full overflow-y-auto pb-[150px] pt-[100px] relative"
+          className="flex-1 w-full overflow-y-auto pb-[150px] pt-[100px] relative pl-5 md:pl-0"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {messages.map((m, idx) => (
-            <div key={m.id} className="text-left ml-[60px] relative">
+            // Ajuste del margen izquierdo de los mensajes para móvil
+            // ml-4 para mobile, md:ml-[60px] para desktop.
+            <div key={m.id} className="text-left ml-4 md:ml-[60px] relative">
               {m.role === "user" ? (
                 <>
-                  <div className="absolute -left-[40px] top-1 w-3 h-3 bg-black rounded-full" />
-                  <div className="text-[#404040] font-medium text-lg max-w-[440px]">
+                  {/* El círculo del usuario también necesita ajustarse para móviles */}
+                  {/* -left-2 para mobile, md:-left-[40px] para desktop. */}
+                  <div className="absolute -left-2.5 top-1 w-3 h-3 bg-black rounded-full md:-left-[40px]" />
+                  {/* Ajuste de tamaño de texto y ancho máximo para móviles */}
+                  {/* text-base para mobile, md:text-lg para desktop. */}
+                  {/* max-w-[calc(100%-20px)] para mobile (para que no toque los bordes), md:max-w-[440px] para desktop. */}
+                  <div className="text-[#404040] font-medium text-base md:text-lg max-w-[calc(100%-20px)] md:max-w-[440px] tracking-wide">
                     {m.content}
                   </div>
                 </>
               ) : (
-                <div className="text-[#404040] text-xs max-w-[440px]">
-                  {formatContent(m.content)}
-                  {/* El cursor parpadeante debe aparecer inmediatamente en el mensaje del asistente vacío o mientras se anima */}
+                // Ajuste de ancho máximo para mensajes del asistente para móviles
+                // max-w-[calc(100%-20px)] para mobile, md:max-w-[440px] para desktop.
+                <div className="text-[#404040] text-sm max-w-[calc(100%-20px)] md:max-w-[440px]">
+                  <MarkdownContent content={m.content} />
+                  {/* El cursor parpadeante sigue siendo visible aquí, y su ref se maneja con el espaciador final */}
                   {(
                     (m.content === "" && idx === messages.length - 1 && m.role === "assistant") ||
                     (isTyping && m.id === streamingMessageId)
                   ) && (
                     <span
-                      ref={m.id === streamingMessageId ? chatEndRef : null}
                       className="inline-block align-middle bg-[#404040] animate-pulse"
                       style={{ width: '8px', height: '20px', animationDuration: '1s' }}
                     />
@@ -211,17 +259,24 @@ useLayoutEffect(() => {
             </div>
           ))}
 
-          {/* Elemento fantasma al final del chat para el scroll, solo si no hay un cursor parpadeante activo */}
-          {(!isTyping || messages[messages.length - 1]?.id !== streamingMessageId) && (
-             <div ref={chatEndRef} className="h-0 w-0" />
-          )}
+          {/* Elemento espaciador al final del chat. Su `height` empuja el contenido hacia arriba. */}
+          {/* Su `ref` siempre recibe el `chatEndRef`. */}
+          {/* Ajusta la altura para que el cursor siempre quede por encima del textbox. */}
+          {/* Un valor de 100px a 150px suele ser bueno, dependiendo de la altura de tu textbox. */}
+          <div ref={chatEndRef} className="h-[100px] w-0" />
+          {/* Nota: Eliminé la lógica condicional que asignaba el ref al cursor o a este div.
+               Ahora el ref siempre va a este div, y el useLayoutEffect siempre scrollea a este div,
+               asegurando el espacio inferior. El cursor simplemente es parte del contenido. */}
 
         </div>
       </div>
 
-      {/* TEXTBOX (sin cambios) */}
-      <div className="fixed bottom-0 left-0 w-full z-10">
-        <div className="w-[600px] mx-auto mb-20">
+      {/* TEXTBOX */}
+      {/* En móviles, el textbox debe ocupar todo el ancho y tener un padding lateral. */}
+      <div className="fixed bottom-0 left-0 w-full z-10 p-4 md:p-0"> {/* p-4 para móviles (16px de padding), md:p-0 lo quita en desktop */}
+        {/* w-full en móviles, md:w-[600px] en desktop. */}
+        {/* mb-4 para móviles (margen inferior reducido), md:mb-20 para desktop. */}
+        <div className="w-full md:w-[600px] mx-auto mb-4 md:mb-20">
           <form onSubmit={handleSubmit}>
             <div className="flex items-center w-full border-2 border-[#404040] rounded-full p-1 pr-1.5 bg-white">
               <input
