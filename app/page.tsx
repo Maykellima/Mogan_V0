@@ -224,31 +224,19 @@ export default function MinimalAIChat() {
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {messages.map((m, idx) => (
-            // Ajuste del margen izquierdo de los mensajes para móvil
-            // ml-4 para mobile, md:ml-[60px] para desktop.
             <div key={m.id} className="text-left ml-4 md:ml-[60px] relative">
               {m.role === "user" ? (
-                <>
-                  {/* El círculo del usuario también necesita ajustarse para móviles */}
-                  {/* -left-2 para mobile, md:-left-[40px] para desktop. */}
-                  <div className="absolute -left-2.5 top-1 w-3 h-3 bg-black rounded-full md:-left-[40px]" />
-                  {/* Ajuste de tamaño de texto y ancho máximo para móviles */}
-                  {/* text-base para mobile, md:text-lg para desktop. */}
-                  {/* max-w-[calc(100%-20px)] para mobile (para que no toque los bordes), md:max-w-[440px] para desktop. */}
+                <div className="flex items-baseline">
+                  <div className="w-3 h-3 bg-black rounded-full mr-[5px] md:mr-[10px] mt-[2px]" />
                   <div className="text-[#404040] font-medium text-base md:text-lg max-w-[calc(100%-20px)] md:max-w-[440px] tracking-wide">
                     {m.content}
                   </div>
-                </>
+                </div>
               ) : (
-                // Ajuste de ancho máximo para mensajes del asistente para móviles
-                // max-w-[calc(100%-20px)] para mobile, md:max-w-[440px] para desktop.
                 <div className="text-[#404040] text-sm max-w-[calc(100%-20px)] md:max-w-[440px]">
                   <MarkdownContent content={m.content} />
-                  {/* El cursor parpadeante sigue siendo visible aquí, y su ref se maneja con el espaciador final */}
-                  {(
-                    (m.content === "" && idx === messages.length - 1 && m.role === "assistant") ||
-                    (isTyping && m.id === streamingMessageId)
-                  ) && (
+                  {((m.content === "" && idx === messages.length - 1 && m.role === "assistant") ||
+                    (isTyping && m.id === streamingMessageId)) && (
                     <span
                       className="inline-block align-middle bg-[#404040] animate-pulse"
                       style={{ width: '8px', height: '20px', animationDuration: '1s' }}
